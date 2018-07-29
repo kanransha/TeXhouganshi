@@ -1,0 +1,192 @@
+\ProvidesPackage{hougan}
+%
+\usepackage{amsmath}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{tikz}
+\usepackage{ifthen}
+\usetikzlibrary{decorations}
+% \begin{hougan}{横の文字数(5の倍数がおすすめ)}{文字のサイズ}
+% 	\danraku{一段落目。}
+% 	\danraku{二段落目。}
+% \end{hougan}
+%
+%
+\newlength\lettersize
+\newlength\boxsize
+\newlength\innersep
+\newcount\mycolumn
+\newcounter{myrow}
+\newcount\currentrow
+\newcounter{nextrow}
+\newcount\houganwidth
+\newcount\houganheight
+\newlength\xposition
+\newlength\yposition
+\gdef\moji{\relax}
+\newboolean{kutouten}
+\newboolean{komoji}
+\definecolor{hougancolor}{cmyk}{1,0,0,0}
+%
+%
+\newenvironment{hougan}[3]{
+	\houganwidth = #1
+	\houganheight = #2
+	\lettersize = #3
+	\innersep = 0.125\lettersize
+	\boxsize = 9.2\innersep
+	\begin{center}
+	\begin{tikzpicture}
+	\setboolean{kutouten}{false}
+	\setboolean{komoji}{false}
+}{%
+	\drawhougan
+	%
+	\end{tikzpicture}
+	\end{center}
+}
+%
+%
+\newcommand{\danraku}[1]{
+	%\makeatletter
+	\ifnum \value{myrow}=\houganheight
+		\drawhougan
+		\end{tikzpicture}
+		\newpage
+		\setcounter{myrow}{0}
+		\begin{tikzpicture}
+	\fi
+	\stepcounter{myrow}
+	\mycolumn=2
+	%
+	\@tfor\formoji:=#1\do{
+		\xdef\moji{\formoji}
+		\ifthenelse{\equal{\moji}{．}}{\gdef{\moji}{ 。}}{\relax}%
+		\ifthenelse{\equal{\moji}{，}}{\gdef{\moji}{、}}{\relax}%
+		%
+		%句読点
+		\ifthenelse{\equal{\moji}{。} \OR \equal{\moji}{、} }{
+		
+			\ifthenelse{\mycolumn=1}{
+				\mycolumn = \houganwidth
+				\xposition = \the\mycolumn\boxsize
+				\yposition = -\value{myrow}\boxsize
+				\advance\xposition by 0.2\boxsize
+				\advance\yposition by -0.1\boxsize
+			}{
+				\xposition = \the\mycolumn\boxsize
+				\yposition = -\value{myrow}\boxsize
+				\advance\xposition by -0.3\boxsize
+			}
+			\draw(\xposition,\yposition) node[above left][black][inner sep=\innersep]{\fontsize{\lettersize}{0pt}\selectfont \moji};
+			\setboolean{kutouten}{true}
+			\setboolean{komoji}{false}
+		}
+		%句読点以外
+		{
+			%鉤括弧
+			\ifthenelse{\equal{\moji}{」} \OR \equal{\moji}{』}  \OR \equal{\moji}{）}  \OR \equal{\moji}{］}}{
+				%前が句読点
+				\ifthenelse{\boolean{kutouten}}{
+					\ifthenelse{\mycolumn=1}{
+						\mycolumn=\houganwidth
+						\xposition = \the\mycolumn\boxsize
+						\yposition = -\value{myrow}\boxsize
+						\advance\xposition by 0.25\boxsize
+						\advance\yposition by -0.2\boxsize
+						\draw(\xposition,\yposition) node[above left][black][inner sep=\innersep]{\fontsize{\lettersize}{0pt}\selectfont \moji};
+					}{
+						\advance\mycolumn by -1
+						\draw(\the\mycolumn\boxsize,-\value{myrow}\boxsize) node[above left][black][inner sep=\innersep]{\fontsize{\lettersize}{0pt}\selectfont \moji};
+					}
+				}
+				%前が句読点以外
+				{
+					\xposition = \the\mycolumn\boxsize
+					\advance\xposition by -0.3\boxsize
+					\draw(\xposition,-\value{myrow}\boxsize) node[above left][black][inner sep=\innersep]{\fontsize{\lettersize}{0pt}\selectfont \moji};
+				}
+				\setboolean{komoji}{false}
+			}
+			%鉤括弧以外
+			{
+				%小文字
+				\ifthenelse{
+					\equal{\moji}{a} \OR \equal{\moji}{b}  \OR \equal{\moji}{c}  \OR \equal{\moji}{d} \OR
+					\equal{\moji}{e} \OR \equal{\moji}{f}  \OR \equal{\moji}{g}  \OR \equal{\moji}{h} \OR
+					\equal{\moji}{i} \OR \equal{\moji}{j}  \OR \equal{\moji}{k}  \OR \equal{\moji}{l} \OR
+					\equal{\moji}{m} \OR \equal{\moji}{n}  \OR \equal{\moji}{o}  \OR \equal{\moji}{p} \OR
+					\equal{\moji}{q} \OR \equal{\moji}{r}  \OR \equal{\moji}{s}  \OR \equal{\moji}{t} \OR
+					\equal{\moji}{u} \OR \equal{\moji}{v}  \OR \equal{\moji}{w}  \OR \equal{\moji}{x} \OR
+					\equal{\moji}{y} \OR \equal{\moji}{z}  \OR \equal{\moji}{0}  \OR \equal{\moji}{1} \OR
+					\equal{\moji}{2} \OR \equal{\moji}{3}  \OR \equal{\moji}{4}  \OR \equal{\moji}{5} \OR
+					\equal{\moji}{6} \OR \equal{\moji}{7}  \OR \equal{\moji}{8}  \OR \equal{\moji}{9} \OR
+					\equal{\moji}{.} \OR \equal{\moji}{,}
+				}{
+					\ifthenelse{\boolean{komoji}}{
+						\ifthenelse{\mycolumn=1}{\mycolumn=\houganwidth}{\advance\mycolumn by -1}
+						\draw(\the\mycolumn\boxsize,-\value{myrow}\boxsize) node[above left][black][inner sep=\innersep]{\fontsize{\lettersize}{0pt}\selectfont \moji};
+						\setboolean{komoji}{false}
+					}{
+						\checknewline
+						\xposition = \the\mycolumn\boxsize
+						\yposition = -\value{myrow}\boxsize
+						\advance\xposition by -0.4\boxsize
+						\draw(\xposition,\yposition) node[above left][black][inner sep=\innersep]{\fontsize{\lettersize}{0pt}\selectfont \moji};
+						\setboolean{komoji}{true}
+					}
+				}
+				%小文字以外
+				{
+					\checknewline
+					\draw(\the\mycolumn\boxsize,-\value{myrow}\boxsize) node[above left][black][inner sep=\innersep]{\fontsize{\lettersize}{0pt}\selectfont \moji};
+					\setboolean{komoji}{false}
+				}
+			}
+			\setboolean{kutouten}{false}
+		}
+		\gdef\moji{\relax}
+		\advance \mycolumn by 1
+		\ifnum\mycolumn>\houganwidth
+			\mycolumn=1
+		\fi
+	%
+	}
+}
+%改行するかを検査し，場合によっては次の方眼紙へ
+\newcommand{\checknewline}{
+	\ifnum\mycolumn=1
+		\ifnum \value{myrow}=\houganheight
+			\drawhougan
+			\end{tikzpicture}
+			\newpage
+			\setcounter{myrow}{0}
+			\begin{tikzpicture}
+		\fi
+		\stepcounter{myrow}
+		\mycolumn=1
+	\fi
+}
+%
+\newcommand{\drawhougan}{
+	\mycolumn=0
+	%
+	\loop
+		\draw(\the\mycolumn\boxsize,0) node[above][hougancolor]{\fontsize{0.6\lettersize}{0pt}\selectfont \the\mycolumn};
+		\ifnum\mycolumn<\houganwidth
+		\advance \mycolumn by 5
+	\repeat
+	%
+	\addtocounter{nextrow}{5}
+	\currentrow = 5
+	%
+	\loop
+	\draw(\the\houganwidth\boxsize,-\currentrow\boxsize) node[right][hougancolor]{\fontsize{0.6\lettersize}{0pt}\selectfont \arabic{nextrow}};
+	\ifnum\currentrow < \value{myrow} 
+	\advance \currentrow by 5
+	\addtocounter{nextrow}{5}
+	\repeat
+	%
+	\draw[hougancolor][semithick] (0,0) -- (\the\houganwidth\boxsize,0) -- (\the\houganwidth\boxsize,-\currentrow\boxsize) -- (0,-\currentrow\boxsize) --cycle;
+	\draw[step=\boxsize][hougancolor][densely dotted] (0,-\currentrow\boxsize) grid (\houganwidth\boxsize,0);
+	\draw[step=5\boxsize][hougancolor][dashed] (0,-\currentrow\boxsize) grid (\houganwidth\boxsize,0);
+}
